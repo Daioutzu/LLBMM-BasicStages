@@ -1,15 +1,13 @@
 ﻿using LLHandlers;
 using System.Collections.Generic;
 using System.IO;
-using System.Xml;
-using System.Xml.Serialization;
 using UnityEngine;
 
 namespace BasicStages
 {
     class BasicStages : MonoBehaviour
     {
-        private const string modVersion = "1.0.3";
+        private const string modVersion = "1.0.4";
         private const string repositoryOwner = "Daioutzu";
         private const string repositoryName = "LLBMM-BasicStages";
 
@@ -19,7 +17,7 @@ namespace BasicStages
 
         public static void Initialize()
         {
-            GameObject gameObject = new GameObject("BasicStages",typeof(BasicStages));
+            GameObject gameObject = new GameObject("BasicStages", typeof(BasicStages));
             Instance = gameObject.GetComponent<BasicStages>();
             DontDestroyOnLoad(gameObject);
         }
@@ -27,20 +25,37 @@ namespace BasicStages
 #if useAssetBundle != true
 
         private readonly static string resourceFolder = Application.dataPath + "/Managed/BasicStagesResources";
-        private readonly static AssetBundle uiBundle = AssetBundle.LoadFromFile(resourceFolder + "/Bundles/stagecolours");
+        private readonly static string bundleLocation = resourceFolder + "/Bundles/bs_materials";
+        private static AssetBundle uiBundle;
         public static Dictionary<string, Material> materialAssets = new Dictionary<string, Material>();
         public static Dictionary<string, Sprite> spriteAssets = new Dictionary<string, Sprite>();
+        public static bool bundleLoaded { get; private set; }
 
         static void LoadAssets()
         {
-            Material[] materials = uiBundle.LoadAllAssets<Material>();
-            string txt = "";
-            for (int i = 0; i < materials.Length; i++)
+            if (File.Exists(bundleLocation))
             {
-                materialAssets.Add(materials[i].name, materials[i]);
-                txt += $"[LLBMM] Material: {materials[i].name}\n";
+                uiBundle = AssetBundle.LoadFromFile(bundleLocation);
+                Material[] materials = uiBundle.LoadAllAssets<Material>();
+#if DEBUG
+                string txt = ""; 
+#endif
+                for (int i = 0; i < materials.Length; i++)
+                {
+                    materialAssets.Add(materials[i].name, materials[i]);
+#if DEBUG
+                    txt += $"[LLBMM] Material: {materials[i].name}\n";
+#endif
+                }
+                bundleLoaded = true;
+#if DEBUG
+                Debug.Log($"{txt}");
+#endif
             }
-            Debug.Log($"{txt}"); 
+            else
+            {
+                Debug.Log("[LLBMM] BasicStages: The \"stagecolours\" could not be loaded. Using coded colours as a workaround");
+            }
         }
 
 #endif
@@ -80,7 +95,7 @@ namespace BasicStages
         {
             if ((MMI != null && !modIntegrated) || LLModMenu.ModMenu.Instance.inModSubOptions && LLModMenu.ModMenu.Instance.currentOpenMod == gameObject.name)
             {
-                
+
                 allStageAreBasic = MMI.GetTrueFalse(MMI.configBools["(bool)overrideAllStagesToBasic"]);
 
                 for (int i = 0; i < stageNames.Length; i++)

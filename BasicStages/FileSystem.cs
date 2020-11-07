@@ -55,7 +55,12 @@ namespace BasicStages
             }
             else
             {
-                return null;
+                List<StageColorElement> stageColorElements = new List<StageColorElement>()
+                {
+                    new StageColorElement(Stage.NONE,  "#1a1a22", "#27272f"),
+                };
+                Debug.Log("[LLBMM] BasicStages: Could not load \"BasicStageColours.xml\". Using coded colours as a workaround");
+                return stageColorElements;
             }
         }
     }

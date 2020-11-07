@@ -7,16 +7,15 @@ namespace BasicStages
 {
     class StageVisualHandler : MonoBehaviour
     {
-        static Material stageBackgroundMat = new Material(Shader.Find("Unlit/Color"))
-        {
-            color = new Color(0.184f, 0.192f, 0.212f)
-        };
-        static Material stageBackgroundOutLineMat = new Material(Shader.Find("Unlit/Color"))
-        {
-            color = new Color(0.125f, 0.133f, 0.145f)
-        };
+        static Material stageBackgroundMat = new Material(Shader.Find("Unlit/Color")) { color = new Color(0.184f, 0.192f, 0.212f) };
+        static Material stageBackgroundOutLineMat = new Material(Shader.Find("Unlit/Color")) { color = new Color(0.125f, 0.133f, 0.145f) };
 
-        static Material stageTopFront, stageTopInside, stageColumnRightInside, stageColumnLeftInside, stageColumnFront, stageBackground;
+        static Material stageTopFront;
+        static Material stageTopInside;
+        static Material stageColumnRightInside;
+        static Material stageColumnLeftInside;
+        static Material stageColumnFront;
+        static Material stageBackground;
 
         static List<StageColorElement> stageColorElements = new List<StageColorElement>();
 
@@ -30,11 +29,6 @@ namespace BasicStages
 
         void Destroy()
         {
-            Destroy(bgMeshObject);
-            Destroy(leftMeshObject);
-            Destroy(rightMeshObject);
-            Destroy(topMeshObject);
-            Destroy(bottomMeshObject);
             Debug.Log("[LLBMM] StageVisualHandler: Destroyed");
         }
 
@@ -42,126 +36,54 @@ namespace BasicStages
         {
             stageColorElements = FileSystem.LoadXml();
 
-            stageTopFront = BasicStages.materialAssets["Bar_Front"];
-            stageTopInside = BasicStages.materialAssets["Bar_Inside"];
-            stageColumnFront = BasicStages.materialAssets["Column_Front"];
-            stageColumnRightInside = BasicStages.materialAssets["Column_Inside_Right"];
-            stageColumnLeftInside = BasicStages.materialAssets["Column_Inside_Left"];
-            stageBackground = BasicStages.materialAssets["Background"];
+            if (BasicStages.bundleLoaded)
+            {
+                stageBackground = BasicStages.materialAssets["Tile"];
+                stageTopFront = Instantiate(BasicStages.materialAssets["Tile"]);
+                stageColumnFront = Instantiate(BasicStages.materialAssets["Tile"]);
+                stageColumnFront.mainTextureScale = new Vector2(1, 8);
+                stageTopFront.mainTextureScale = new Vector2(26, 1);
+                stageTopInside = BasicStages.materialAssets["Bar_Inside"];
+                stageColumnLeftInside = BasicStages.materialAssets["Column_Inside"];
+                stageColumnRightInside = Instantiate(BasicStages.materialAssets["Column_Inside"]);
+                stageColumnRightInside.mainTextureScale = new Vector2(1, 8);
+            }
+            else
+            {
+                stageBackground = stageTopInside = stageColumnRightInside = stageColumnLeftInside = new Material(Shader.Find("Unlit/Color")) { color = new Color(0.184f, 0.192f, 0.212f) };
+                stageTopFront = stageColumnFront = new Material(Shader.Find("Unlit/Color")) { color = new Color(0.125f, 0.133f, 0.145f) };
+                Debug.Log("[LLBMM] BasicStages: The \"stagecolours\" could not be loaded. Using coded colours as a workaround");
+            }
 
             for (int i = 0; i < stageColorElements.Count; i++)
             {
                 if (stageColorElements[i]?.name == StageHandler.curStage)
                 {
-                    stageBackgroundMat.SetColor("_Color", stageColorElements[i].GetBackgroundColor());
-                    stageBackgroundOutLineMat.SetColor("_Color", stageColorElements[i].GetWallColor());
-
-                    stageTopFront.SetColor("_Color", stageColorElements[i].GetWallColor());
-                    stageTopInside.SetColor("_Color", stageColorElements[i].GetWallColor());
-                    stageColumnFront.SetColor("_Color", stageColorElements[i].GetWallColor());
-                    stageColumnRightInside.SetColor("_Color", stageColorElements[i].GetWallColor());
-                    stageColumnLeftInside.SetColor("_Color", stageColorElements[i].GetWallColor());
-                    stageBackground.SetColor("_Color", stageColorElements[i].GetBackgroundColor());
+                    SetMaterialColours(i);
                     break;
                 }
                 else if (stageColorElements[i]?.name == Stage.NONE)
                 {
-                    stageBackgroundMat.SetColor("_Color", stageColorElements[i].GetBackgroundColor());
-                    stageBackgroundOutLineMat.SetColor("_Color", stageColorElements[i].GetWallColor());
-
-                    stageTopFront.SetColor("_Color", stageColorElements[i].GetWallColor());
-                    stageTopInside.SetColor("_Color", stageColorElements[i].GetWallColor());
-                    stageColumnFront.SetColor("_Color", stageColorElements[i].GetWallColor());
-                    stageColumnRightInside.SetColor("_Color", stageColorElements[i].GetWallColor());
-                    stageColumnLeftInside.SetColor("_Color", stageColorElements[i].GetWallColor());
-                    stageBackground.SetColor("_Color", stageColorElements[i].GetBackgroundColor());
+                    SetMaterialColours(i);
                 }
             }
-
         }
 
-        static GameObject bgMeshObject;
-        static GameObject leftMeshObject;
-        static GameObject rightMeshObject;
-        static GameObject topMeshObject;
-        static GameObject bottomMeshObject;
-        static GameObject insideBackgroundMeshObject;
-        static GameObject insideLeftMeshObject;
+        static void SetMaterialColours(int i)
+        {
+            stageBackgroundMat.SetColor("_Color", stageColorElements[i].GetBackgroundColor());
+            stageBackgroundOutLineMat.SetColor("_Color", stageColorElements[i].GetWallColor());
+
+            stageTopFront.SetColor("_Color", stageColorElements[i].GetWallColor());
+            stageTopInside.SetColor("_Color", stageColorElements[i].GetWallColor());
+            stageColumnFront.SetColor("_Color", stageColorElements[i].GetWallColor());
+            stageColumnRightInside.SetColor("_Color", stageColorElements[i].GetWallColor());
+            stageColumnLeftInside.SetColor("_Color", stageColorElements[i].GetWallColor());
+            stageBackground.SetColor("_Color", stageColorElements[i].GetBackgroundColor());
+        }
+
         static void CreateStageMesh(IBGCBLLKIHA obCenter, IBGCBLLKIHA obSize)
         {
-
-            Vector3[] mainVerts = new Vector3[4];
-            Vector3[] leftVerts = new Vector3[4];
-            Vector3[] topVerts = new Vector3[4];
-            Vector3[] rightVerts = new Vector3[4];
-            Vector3[] bottomVerts = new Vector3[4];
-            Vector3[] insideBackground = new Vector3[4];
-            Vector3[] insideLeftVerts = new Vector3[4];
-            Vector3[] insideBottomVerts = new Vector3[4];
-            Vector3[] insideTopVerts = new Vector3[4];
-            Vector3[] insideRightVerts = new Vector3[4];
-
-
-            Vector2 center = ConvertTo.Vector2(obCenter);
-            Vector2 halfSize = ConvertTo.Vector2(obSize) * new Vector2(0.5f, 0.5f);
-
-            mainVerts[0] = new Vector3(center.x - halfSize.x, center.y - halfSize.y);// Bottom Left
-            mainVerts[1] = new Vector3(center.x - halfSize.x, center.y + halfSize.y);// Top Left
-            mainVerts[2] = new Vector3(center.x + halfSize.x, center.y - halfSize.y);// Bottom Right
-            mainVerts[3] = new Vector3(center.x + halfSize.x, center.y + halfSize.y);// Top Right
-
-            float thicc = 3f;
-            float backgroundOffset = 2f;
-            float foregroundOffset = -0.2f;
-            float bottomOffset = -10f;
-
-            Vector3 zOffset = new Vector3(0, 0, foregroundOffset);
-            leftVerts[0] = mainVerts[0] + zOffset;
-            leftVerts[1] = leftVerts[0] - new Vector3(thicc, 0) + zOffset;
-            leftVerts[2] = mainVerts[1] + zOffset;
-            leftVerts[3] = leftVerts[2] - new Vector3(thicc, 0) + zOffset;
-
-            rightVerts[1] = mainVerts[2] + zOffset;
-            rightVerts[0] = rightVerts[1] + new Vector3(thicc, 0) + zOffset;
-            rightVerts[3] = mainVerts[3];
-            rightVerts[2] = rightVerts[3] + new Vector3(thicc, 0) + zOffset;
-
-            topVerts[0] = leftVerts[3] + zOffset;
-            topVerts[1] = topVerts[0] + new Vector3(0, thicc) + zOffset;
-            topVerts[2] = rightVerts[2] + zOffset;
-            topVerts[3] = topVerts[2] + new Vector3(0, thicc) + zOffset;
-
-            bottomVerts[1] = leftVerts[1] + zOffset;
-            bottomVerts[0] = bottomVerts[1] - new Vector3(0, thicc) + zOffset;
-            bottomVerts[3] = rightVerts[0] + zOffset;
-            bottomVerts[2] = bottomVerts[3] - new Vector3(0, thicc) + zOffset;
-
-
-            insideLeftVerts[0] = new Vector3(center.x - halfSize.x, center.y - halfSize.y, foregroundOffset);
-            insideLeftVerts[1] = new Vector3(center.x - halfSize.x, center.y + halfSize.y, foregroundOffset);
-            insideLeftVerts[2] = new Vector3(mainVerts[0].x, mainVerts[0].y, backgroundOffset);
-            insideLeftVerts[3] = new Vector3(mainVerts[1].x, mainVerts[1].y, backgroundOffset);
-
-            insideBottomVerts[0] = new Vector3(center.x - halfSize.x, center.y - halfSize.y, bottomOffset);
-            insideBottomVerts[1] = new Vector3(insideBottomVerts[0].x, insideBottomVerts[0].y, backgroundOffset);
-            insideBottomVerts[2] = new Vector3(center.x + halfSize.x, center.y - halfSize.y, bottomOffset);
-            insideBottomVerts[3] = new Vector3(insideBottomVerts[2].x, insideBottomVerts[2].y, backgroundOffset);
-
-            insideTopVerts[1] = new Vector3(center.x - halfSize.x, center.y + halfSize.y, foregroundOffset);
-            insideTopVerts[0] = new Vector3(insideTopVerts[1].x, insideTopVerts[1].y, backgroundOffset);
-            insideTopVerts[3] = new Vector3(center.x + halfSize.x, center.y + halfSize.y, foregroundOffset);
-            insideTopVerts[2] = new Vector3(insideTopVerts[3].x, insideTopVerts[3].y, backgroundOffset);
-
-            insideRightVerts[2] = new Vector3(center.x + halfSize.x, center.y - halfSize.y, foregroundOffset);
-            insideRightVerts[0] = new Vector3(insideRightVerts[2].x, insideRightVerts[2].y, backgroundOffset);
-            insideRightVerts[3] = new Vector3(center.x + halfSize.x, center.y + halfSize.y, foregroundOffset);
-            insideRightVerts[1] = new Vector3(insideRightVerts[3].x, insideRightVerts[3].y, backgroundOffset);
-
-            insideBackground[0] = new Vector3(center.x - halfSize.x, center.y - halfSize.y, backgroundOffset);
-            insideBackground[1] = new Vector3(center.x - halfSize.x, center.y + halfSize.y, backgroundOffset);
-            insideBackground[2] = new Vector3(center.x + halfSize.x, center.y - halfSize.y, backgroundOffset);
-            insideBackground[3] = new Vector3(center.x + halfSize.x, center.y + halfSize.y, backgroundOffset);
-
             CreateStageMeshes();
 
             /*camera = Instantiate(GameCamera.GetBackCam());
@@ -208,17 +130,6 @@ namespace BasicStages
             ClearStage(blimp1);
             ClearStage(blimp2);
             ClearStage(blimp3);
-
-            //bgMeshObject = CreateMeshObject("BasicMainMesh", mainVerts);
-            //leftMeshObject = CreateMeshObject("BasicLeftMesh", leftVerts);
-            //rightMeshObject = CreateMeshObject("BasicRightMesh", rightVerts);
-            //topMeshObject = CreateMeshObject("BasicTopMesh", topVerts);
-            //bottomMeshObject = CreateMeshObject("BasicBottomMesh", bottomVerts);
-            //insideBackgroundMeshObject = CreateMeshObject("BackMesh", insideBackground);
-            //insideLeftMeshObject = CreateMeshObject("insideStageLeft", insideLeftVerts);
-            //CreateMeshObject("insideStageBottom", insideBottomVerts);
-            //CreateMeshObject("insideStageTop", insideTopVerts);
-            //CreateMeshObject("insideStageRight", insideRightVerts);
         }
 
         static void CreateStageMeshes()
@@ -244,6 +155,9 @@ namespace BasicStages
             leftFrontFaceVerts[1] = new Vector3(leftFrontFaceVerts[3].x - sideOffset, leftFrontFaceVerts[3].y, column_foregroundOffset);
             leftFrontFaceVerts[0] = new Vector3(leftFrontFaceVerts[3].x - sideOffset, leftFrontFaceVerts[2].y, column_foregroundOffset);
 
+            CreateMeshObject("LeftColumn_Inside", leftRightFaceVerts, stageColumnLeftInside);
+            CreateMeshObject("LeftColumn_Face", leftFrontFaceVerts, stageColumnFront);
+
             //Creates Right Column
             Vector3[] rightLeftFaceVerts = new Vector3[4];
             Vector3[] rightFrontFaceVerts = new Vector3[4];
@@ -257,6 +171,9 @@ namespace BasicStages
             rightFrontFaceVerts[1] = new Vector3(rightLeftFaceVerts[3].x, rightLeftFaceVerts[3].y, column_foregroundOffset);
             rightFrontFaceVerts[2] = new Vector3(rightFrontFaceVerts[0].x + sideOffset, rightFrontFaceVerts[0].y, column_foregroundOffset);
             rightFrontFaceVerts[3] = new Vector3(rightFrontFaceVerts[1].x + sideOffset, rightFrontFaceVerts[1].y, column_foregroundOffset);
+
+            CreateMeshObject("RightColumn_Inside", rightLeftFaceVerts, stageColumnRightInside);
+            CreateMeshObject("RightColumn_Face", rightFrontFaceVerts, stageColumnFront);
 
             //Creates Background
             float backgroundOffset = 5f;
@@ -281,6 +198,9 @@ namespace BasicStages
             floorVerts[0] = new Vector3(backgroundVerts[0].x, floorVerticalOffset, foregroundOffset);
             floorVerts[2] = new Vector3(backgroundVerts[2].x, floorVerticalOffset, foregroundOffset);
 
+            CreateMeshObject("FloorMesh", floorVerts, stageBackground);
+            CreateMeshObject("BackMesh", backgroundVerts, stageBackground);
+
             //Creats Top bar
             Vector3[] topFrontFaceVerts = new Vector3[4];
             Vector3[] topUnderFaceVerts = new Vector3[4];
@@ -294,6 +214,9 @@ namespace BasicStages
             topUnderFaceVerts[1] = new Vector3(leftFrontFaceVerts[1].x, leftFrontFaceVerts[1].y, leftFrontFaceVerts[1].z);
             topUnderFaceVerts[2] = new Vector3(topFrontFaceVerts[2].x, topFrontFaceVerts[2].y, columBackOffset);
             topUnderFaceVerts[3] = new Vector3(rightFrontFaceVerts[3].x, rightFrontFaceVerts[3].y, rightFrontFaceVerts[3].z);
+
+            CreateMeshObject("TopBar_Face", topFrontFaceVerts, stageTopFront);
+            CreateMeshObject("TopBar_Inside", topUnderFaceVerts, stageTopInside);
 
             //Creats Bottom Bar
             Vector3[] bottomFrontFaceVerts = new Vector3[4];
@@ -309,20 +232,8 @@ namespace BasicStages
             bottomInsideFaceVerts[2] = new Vector3(bottomFrontFaceVerts[3].x, bottomFrontFaceVerts[3].y, bottomFrontFaceVerts[3].z);
             bottomInsideFaceVerts[3] = new Vector3(bottomInsideFaceVerts[2].x, bottomInsideFaceVerts[2].y, columBackOffset);
 
-            CreateMeshObject("insideleftFaceVerts", leftRightFaceVerts, stageColumnLeftInside);
-            CreateMeshObject("leftFrontFaceVerts", leftFrontFaceVerts, stageColumnFront);
-
-            CreateMeshObject("insiderightFaceVerts", rightLeftFaceVerts, stageColumnRightInside);
-            CreateMeshObject("rightFrontFaceVerts", rightFrontFaceVerts, stageColumnFront);
-            CreateMeshObject("TopFrontFaceVerts", topFrontFaceVerts, stageTopFront);
-            CreateMeshObject("insideTopUnderFaceVerts", topUnderFaceVerts, stageTopInside);
-
-            CreateMeshObject("bottomFrontFaceVerts", bottomFrontFaceVerts, stageTopFront);
-            CreateMeshObject("bottomInsideFaceVerts", bottomInsideFaceVerts, stageTopFront);
-
-            CreateMeshObject("BackMesh", backgroundVerts, stageBackground);
-            CreateMeshObject("FloorMesh", floorVerts, stageBackground);
-
+            CreateMeshObject("BottomBar_Face", bottomFrontFaceVerts, stageTopFront);
+            CreateMeshObject("BottomBar_Inside", bottomInsideFaceVerts, stageTopFront);
         }
 
         #region Asset Clearing Methods
@@ -368,21 +279,21 @@ namespace BasicStages
                     bool flag = gameObject.transform.GetChild(i).name.Contains("Positions");
                     bool flag2 = gameObject.transform.GetChild(i).name.Contains("Light");
 #if DEBUG
-                    string txt = ""; 
+                    string txt = "";
 #endif
                     if (flag == false && flag2 == false)
                     {
                         //gameObject.transform.GetChild(i).gameObject.SetActive(false);
                         gameObject.transform.GetChild(i).gameObject.SetActive(false);
 #if DEBUG
-                        txt += $"{gameObject.transform.GetChild(i).gameObject.name}"; 
+                        txt += $"{gameObject.transform.GetChild(i).gameObject.name}";
 #endif
                     }
 #if DEBUG
                     if (txt != "")
                     {
                         Debug.Log($"{txt} - Disabled");
-                    } 
+                    }
 #endif
                 }
             }
