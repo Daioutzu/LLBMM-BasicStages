@@ -1,5 +1,4 @@
 # LLBMM-BasicStages
-This is a Lethal League Blaze Mod that puts the stages in their most basic forms removing the visible complexity of stage backgrounds
 All Stage Names:
 OUTSKIRTS
 SEWERS
